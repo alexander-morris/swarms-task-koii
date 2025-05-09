@@ -3,6 +3,8 @@
 ## Overview
 This system implements a distributed task processing architecture that coordinates between a middle server, a JavaScript worker layer, and a Python API layer to process and manage swarm-based tasks.
 
+This allows Swarms to run across Koii nodes, with full payments managed in $SWARMS.
+
 ## System Architecture
 
 ### Components
