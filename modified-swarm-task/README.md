@@ -81,6 +81,85 @@ sequenceDiagram
     JS Audit-->>Middle Server: Audit Status
 ```
 
+## Work Item Schema
+
+### 1. SwarmSpec Object
+```typescript
+interface SwarmSpec {
+  name?: string;              // Name of the swarm
+  description?: string;       // Description of the swarm's purpose
+  agents: AgentSpec[];        // Array of agent configurations
+  max_loops?: number;         // Maximum iteration loops (default: 1)
+  swarm_type?: string;        // Type of workflow
+  rearrange_flow?: string;    // Instructions to rearrange workflow
+  task: string;              // The task to be performed
+  img?: string;              // Optional image URL
+  return_history?: boolean;   // Include conversation history (default: true)
+  rules?: string;            // Guidelines for agent behavior
+  schedule?: ScheduleSpec;    // Scheduling details (for scheduled jobs)
+}
+```
+
+### 2. AgentSpec Object
+```typescript
+interface AgentSpec {
+  agent_name: string;         // Name of the agent
+  description?: string;       // Agent's purpose description
+  system_prompt?: string;     // System prompt for the agent
+  model_name: string;         // AI model to use (e.g., "gpt-4o", "claude-3-opus")
+  auto_generate_prompt?: boolean; // Generate prompts automatically
+  max_tokens?: number;        // Maximum tokens for responses (default: 8192)
+  temperature?: number;       // Response randomness (default: 0.5)
+  role?: string;             // Agent's role (default: "worker")
+  max_loops?: number;        // Maximum loops for this agent (default: 1)
+}
+```
+
+### 3. ScheduleSpec Object
+```typescript
+interface ScheduleSpec {
+  scheduled_time: string;     // When to execute the task (in UTC)
+  timezone?: string;         // Timezone for scheduling (default: "UTC")
+}
+```
+
+### 4. Supported Swarm Types
+- `AgentRearrange`
+- `MixtureOfAgents`
+- `SpreadSheetSwarm`
+- `SequentialWorkflow`
+- `ConcurrentWorkflow`
+- `GroupChat`
+- `MultiAgentRouter`
+- `AutoSwarmBuilder`
+- `HiearchicalSwarm`
+- `auto`
+- `MajorityVoting`
+
+### 5. Example Work Item
+```json
+{
+  "name": "Financial Analysis Swarm",
+  "description": "Market analysis swarm",
+  "agents": [
+    {
+      "agent_name": "Market Analyst",
+      "description": "Analyzes market trends",
+      "system_prompt": "You are a financial analyst expert.",
+      "model_name": "gpt-4o",
+      "role": "worker",
+      "max_loops": 1,
+      "max_tokens": 8192,
+      "temperature": 0.5
+    }
+  ],
+  "max_loops": 1,
+  "swarm_type": "ConcurrentWorkflow",
+  "task": "Analyze market trends for AI and tech sectors",
+  "return_history": true
+}
+```
+
 ## Security Features
 
 1. **Authentication**
