@@ -3,3 +3,12 @@ gunicorn==21.2.0
 python-dotenv==1.0.0
 requests==2.31.0
 pytest==7.4.3
+fastapi==0.109.2
+uvicorn==0.27.1
+pydantic==2.6.1
+supabase==2.3.1
+loguru==0.7.2
+litellm==1.30.7
+psutil==5.9.8
+pytz==2024.1
+swarms==0.1.0

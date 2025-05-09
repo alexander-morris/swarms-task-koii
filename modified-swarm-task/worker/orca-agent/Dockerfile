@@ -1,48 +1,41 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.12-slim
+# Use Python 3.11 slim image
+FROM python:3.11-slim
 
-# Set the working directory in the container
+# Set working directory
 WORKDIR /app
 
-# Copy the requirements.txt file into the container
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    software-properties-common \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
+# Install Python dependencies
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Install Git and any other necessary packages
-RUN apt-get update && apt-get install -y git sudo curl
-
-# Install the dependencies
-RUN pip install -r requirements.txt
-
-# Configure Git to add the safe directory
-RUN git config --global --add safe.directory /app
-
-# Copy the rest of your application code into the container
+# Copy the rest of the application
 COPY . .
 
-ENV MIDDLE_SERVER_URL=https://ik8kcow8ksw8gwgoo0ggosko.dev.koii.network
-
-# Configure logging and output
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
-ENV TERM=xterm-256color
-ENV FORCE_COLOR=1
 
-# Add this environment variable after other ENV declarations
-ENV DATABASE_PATH=/data/database.db
+# Create a health check script
+RUN echo '#!/bin/sh\ncurl -f http://localhost:8080/healthz/ || exit 1' > /app/healthcheck.sh && \
+    chmod +x /app/healthcheck.sh
 
-# Make port 8080 available to the world outside this container
+# Expose the port
 EXPOSE 8080
 
-# Set the command to run your application
-CMD ["gunicorn", \
-    "--log-level=error", \
-    "--error-logfile=-", \
-    "--capture-output", \
-    "--enable-stdio-inheritance", \
-    "--logger-class=gunicorn.glogging.Logger", \
-    "--timeout", "1800", \
-    "--graceful-timeout", "1800", \
-    "--keep-alive", "15", \
-    "-w", "1", \
-    "-b", "0.0.0.0:8080", \
-    "main:app"]
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD /app/healthcheck.sh
+
+# Run the application with gunicorn
+CMD ["gunicorn", "src.api.api:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080", "--timeout", "120"]
