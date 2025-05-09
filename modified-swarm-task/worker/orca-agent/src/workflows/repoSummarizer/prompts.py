@@ -1,0 +1,97 @@
+"""Prompts for the repository summarization workflow."""
+
+PROMPTS = {
+    "system_prompt": (
+        "You are an expert software architect and technical lead specializing in summarizing "
+        "repositories into comprehensive documentation. You excel at analyzing codebases "
+        "and creating clear, structured documentation. Do NOT OVERLY READ THE REPO."
+    ),
+    "create_branch": (
+        "You need to create a feature branch for the README generation.\n"
+        "Create a new branch with a descriptive name related to creating a README file.\n"
+    ),
+    "classify_repository": (
+        "A repository has been cloned locally for you. All files can be accessed relative to the current directory.\n"
+        "Analyze the structure and identify the type of repository this is.\n"
+        "Use the `classify_repository` tool to report your choice.\n"
+        "You must choose one of the following repository types:\n"
+        "- Library/SDK: Code meant to be imported and used by other developers\n"
+        "- Web App: Frontend or full-stack web application\n"
+        "- API Service: Server-side application providing APIs\n"
+        "- Mobile App: Native or cross-platform mobile app\n"
+        "- Tutorial: Educational repository demonstrating techniques\n"
+        "- Template: Starter code for new projects\n"
+        "- CLI Tool: Command-line interface application\n"
+        "- Framework: Foundational structure for building applications\n"
+        "- Data Science: Machine learning or data analysis project\n"
+        "- Plugin: Extension or module for a larger system (e.g., CMS, IDE, platform)\n"
+        "- Chrome Extension: Browser extension targeting the Chrome platform\n"
+        "- Jupyter Notebook: Interactive code notebooks, often for demos or research\n"
+        "- Infrastructure: Configuration or automation code (e.g., Docker, Terraform)\n"
+        "- Smart Contract: Blockchain smart contracts, typically written in Solidity, Rust, etc.\n"
+        "- DApp: Decentralized application with both smart contract and frontend components\n"
+        "- Game: Codebase for a game or game engine (2D, 3D, or browser-based)\n"
+        "- Desktop App: GUI application for desktop environments (e.g., Electron, Qt, Tauri)\n"
+        "- Dataset: Repository containing structured data for analysis or training\n"
+        "- Other: If it doesn't fit into any of the above categories\n"
+        "IMPORTANT: Do not assume that the README is correct. "
+        "Classify the repository based on the codebase.\n"
+        "If files are mentioned in the README but are not present in the codebase, "
+        "do NOT use them as a source of information.\n"
+    ),
+    "generate_readme_section": (
+        "You are writing the {section_name} section of a README file for a repository.\n"
+        "If you don't want to write a section, return an empty string.\n"
+        "The repository has been cloned to the current directory and the files are available for inspection.\n"
+        "The readme will contain the following sections:\n"
+        "{all_sections}\n"
+        "Restrict your documentation to the section you are writing.\n"
+        "IMPORTANT: Read the existing readme.md file ONCE to understand the project, then proceed with writing your section.\n"
+        "DO NOT read the same file multiple times. If you have read readme.md once, you have enough information.\n"
+        "The section should include the following information:\n"
+        "{section_description}\n"
+        "Write the section in markdown format.\n"
+        "The section name will be automatically added as a second level heading. "
+        "DO NOT include it in your documentation. DO NOT include any second level headings.\n"
+        "Any sub-sections you would like to add should be THIRD level headings or LOWER. "
+        "Follow the proper hierarchy when choosing a heading level.\n"
+        "IMPORTANT: DO NOT assume that any existing documentation is correct. It may be inaccurate or outdated.\n"
+        "Create the documentation based SOLELY on the files actually present in the codebase.\n"
+        "EXTREMELY IMPORTANT: If files are mentioned in the README but are not present in the codebase, "
+        "do NOT mention them in your documentation. They do not exist and are not relevant.\n"
+        "This is a public facing document, so DO NOTinclude any instructions or suggestions to the developer.\n"
+    ),
+    "generate_readme": (
+        "Create a descriptive title for the following README contents and create the README file:\n"
+        "{readme_content}\n"
+        "The content will be added automatically, your job is just to create a good title."
+    ),
+    "create_pr": (
+        "You are creating a pull request for the file README_Prometheus.md you have generated. "
+        "The repository has been cloned to the current directory.\n"
+        "Use the `create_pull_request_legacy` tool to create the pull request.\n"
+        "IMPORTANT: Always use relative paths (e.g., 'src/file.py' not '/src/file.py')\n\n"
+        "Steps to create the pull request:\n"
+        "1. First examine the available files to understand the implementation\n"
+        "2. Create a clear and descriptive PR title\n"
+        "3. Write a comprehensive PR description that includes:\n"
+        "   - Description of all changes made\n"
+        "   - The main features and value of the documentation\n"
+    ),
+    "review_readme_file": (
+        "Review the README_Prometheus.md in the repository and evaluate its quality and "
+        "relevance to the repository.\n\n"
+        "Please analyze:\n"
+        "1. Is the README_Prometheus.md file related to this specific repository? (Does it describe the actual code "
+        "and purpose of this repo?)\n"
+        "2. Does it correctly explain the repository's purpose, features, and functionality?\n"
+        "3. Is it comprehensive enough to help users understand and use the repository?\n"
+        "4. Does it follow best practices for README documentation?\n\n"
+        "Use the `review_readme_file` tool to submit your findings.\n"
+        # "IMPORTANT: Do not assume that an existing README is correct. "
+        "Evaluate README_Prometheus.md against the codebase.\n"
+        "DO NOT consider the filename in your analysis, only the content.\n"
+        "STOP after submitting the review report."
+    ),
+    "previous_review_comments": ("Here are the comments from the previous review:\n"),
+}
