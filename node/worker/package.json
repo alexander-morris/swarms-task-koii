@@ -40,8 +40,8 @@
   },
   "devDependencies": {
     "@_koii/namespace-wrapper": "^1.0.23",
-    "@babel/preset-env": "^7.26.0",
-    "@babel/preset-typescript": "^7.26.0",
+    "@babel/preset-env": "^7.27.2",
+    "@babel/preset-typescript": "^7.27.1",
     "@types/cross-spawn": "^6.0.6",
     "@types/eslint": "^9.6.1",
     "@types/express": "^5.0.0",
