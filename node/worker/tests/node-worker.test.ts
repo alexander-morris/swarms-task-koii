@@ -8,6 +8,7 @@ import { namespaceWrapper } from '@_koii/namespace-wrapper';
 process.env.ANTHROPIC_API_KEY = 'test-api-key';
 process.env.GITHUB_TOKEN = 'test-github-token';
 process.env.GITHUB_USERNAME = 'test-github-username';
+process.env.TASK_ID = 'test-task-123';
 
 // Mock PublicKey class
 class MockPublicKey {
@@ -33,12 +34,37 @@ class MockKeypair {
   }
 }
 
+// Mock namespaceWrapper methods
+jest.mock('@_koii/namespace-wrapper', () => ({
+  namespaceWrapper: {
+    storeGet: jest.fn(),
+    getSubmitterAccount: jest.fn(),
+    getMainAccountPubkey: jest.fn(),
+    getBasePath: jest.fn().mockResolvedValue('/tmp/test-base-path'),
+    payloadSigning: jest.fn().mockResolvedValue('test-signature'),
+    storeSet: jest.fn().mockResolvedValue(undefined),
+    TASK_ID: 'test-task-123',
+    logMessage: jest.fn(),
+    LogLevel: {
+      INFO: 'INFO',
+      ERROR: 'ERROR',
+      WARN: 'WARN',
+      DEBUG: 'DEBUG'
+    }
+  }
+}));
+
 describe('Node Worker Integration Tests', () => {
   let config: Awaited<ReturnType<typeof getConfig>>;
 
   beforeAll(async () => {
     // Initialize configuration
     config = await getConfig();
+  });
+
+  beforeEach(() => {
+    // Reset all mocks before each test
+    jest.clearAllMocks();
   });
 
   test('Configuration loading', async () => {
@@ -50,8 +76,7 @@ describe('Node Worker Integration Tests', () => {
 
   test('Task execution', async () => {
     // Mock namespaceWrapper.storeGet
-    const mockStoreGet = jest.spyOn(namespaceWrapper, 'storeGet');
-    mockStoreGet.mockImplementation(async (key: string) => {
+    (namespaceWrapper.storeGet as jest.Mock).mockImplementation(async (key: string) => {
       if (key === 'shouldMakeSubmission') return 'true';
       if (key === 'swarmBountyId') return 'test-bounty-123';
       return null;
@@ -63,20 +88,19 @@ describe('Node Worker Integration Tests', () => {
 
   test('Submission process', async () => {
     // Mock namespaceWrapper.storeGet
-    const mockStoreGet = jest.spyOn(namespaceWrapper, 'storeGet');
-    mockStoreGet.mockImplementation(async (key: string) => {
+    (namespaceWrapper.storeGet as jest.Mock).mockImplementation(async (key: string) => {
       if (key === 'shouldMakeSubmission') return 'true';
       if (key === 'swarmBountyId') return 'test-bounty-123';
       return null;
     });
 
     // Mock namespaceWrapper.getSubmitterAccount
-    const mockGetSubmitterAccount = jest.spyOn(namespaceWrapper, 'getSubmitterAccount');
-    mockGetSubmitterAccount.mockResolvedValue(new MockKeypair('test-staking-key') as any);
+    (namespaceWrapper.getSubmitterAccount as jest.Mock).mockResolvedValue(
+      new MockKeypair('test-staking-key') as any
+    );
 
     // Mock namespaceWrapper.getMainAccountPubkey
-    const mockGetMainAccountPubkey = jest.spyOn(namespaceWrapper, 'getMainAccountPubkey');
-    mockGetMainAccountPubkey.mockResolvedValue('test-public-key');
+    (namespaceWrapper.getMainAccountPubkey as jest.Mock).mockResolvedValue('test-public-key');
 
     // Execute submission
     await expect(submission(1)).resolves.not.toThrow();
@@ -84,8 +108,7 @@ describe('Node Worker Integration Tests', () => {
 
   test('Pre-run checks', async () => {
     // Mock namespaceWrapper.storeGet
-    const mockStoreGet = jest.spyOn(namespaceWrapper, 'storeGet');
-    mockStoreGet.mockImplementation(async (key: string) => {
+    (namespaceWrapper.storeGet as jest.Mock).mockImplementation(async (key: string) => {
       if (key === 'shouldMakeSubmission') return 'false';
       return null;
     });

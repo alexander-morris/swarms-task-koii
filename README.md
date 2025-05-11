@@ -48,6 +48,154 @@ cd modified-swarm-task/worker
 npm run dev
 ```
 
+## Local Testing
+
+### Quick Start
+To run all tests in one command:
+
+```bash
+# Make the script executable
+chmod +x scripts/test-local.sh
+
+# Run the test script
+./scripts/test-local.sh
+```
+
+This script will:
+1. Check for required environment variables
+2. Verify Node.js version and dependencies
+3. Install all required packages
+4. Run the worker tests with verbose output
+5. Report test results
+
+### Prerequisites
+
+- Node.js >= 18.17.0
+- npm or yarn package manager
+- TypeScript 5.6.2 or later
+- MongoDB (for middle server tests)
+
+### Environment Setup
+
+1. Install dependencies for each component:
+   ```bash
+   # Middle server
+   cd middle-server/middle-server
+   npm install
+
+   # Worker
+   cd node/worker
+   npm install
+   ```
+
+2. Set up environment variables:
+   ```bash
+   # Required for worker tests
+   export ANTHROPIC_API_KEY=your_api_key
+   export GITHUB_TOKEN=your_github_token
+   export GITHUB_USERNAME=your_github_username
+   export TASK_ID=your_task_id
+
+   # Required for middle server tests
+   export MONGODB_URI=your_mongodb_uri
+   ```
+
+### Running Tests
+
+#### Worker Tests
+The worker uses Jest for testing with TypeScript support:
+
+```bash
+# Navigate to worker directory
+cd node/worker
+
+# Run all tests
+npm run jest-test
+
+# Run tests with verbose output
+npm run jest-test -- --verbose
+
+# Run a specific test file
+npm run jest-test -- tests/node-worker.test.ts
+
+# Run tests in watch mode (auto-rerun on changes)
+npm run jest-test -- --watch
+```
+
+Test types:
+1. **Integration Tests** (`tests/node-worker.test.ts`):
+   - Tests core worker functionality
+   - Currently passing and verifying basic operations
+   - Includes configuration, task execution, and submission tests
+
+2. **Main Tests** (`tests/main.test.ts`):
+   - Legacy test suite
+   - Currently failing (known issue)
+   - Not recommended for local development
+
+#### Middle Server Tests
+The middle server uses Jest and Supertest for API testing:
+
+```bash
+# Navigate to middle server directory
+cd middle-server/middle-server
+
+# Run all tests
+npm test
+
+# Run tests with verbose output
+npm test -- --verbose
+
+# Run a specific test file
+npm test -- tests/swarm.test.ts
+```
+
+### Test Configuration
+
+Each component has its own test configuration:
+
+- **Worker**:
+  - `jest.config.js`: Jest configuration with ES modules support
+  - `babel.config.js`: Babel configuration for TypeScript
+  - `tsconfig.tests.json`: TypeScript configuration
+
+- **Middle Server**:
+  - `jest.config.js`: Jest configuration
+  - `tsconfig.json`: TypeScript configuration
+
+### Common Issues and Solutions
+
+1. **Module Resolution**:
+   - Ensure TypeScript configurations are properly set up
+   - Check import paths in test files
+
+2. **Environment Variables**:
+   - Verify all required variables are set
+   - Worker tests require `ANTHROPIC_API_KEY`
+   - Middle server tests require `MONGODB_URI`
+
+3. **Watchman Warnings**:
+   ```bash
+   watchman watch-del '/path/to/project' ; watchman watch-project '/path/to/project'
+   ```
+
+4. **Namespace Wrapper Errors**:
+   - Some errors from `@_koii/namespace-wrapper` are expected
+   - These are handled by test mocks
+
+### Current Test Status
+
+- **Worker**:
+  - ✅ Integration tests passing
+  - ❌ Main tests failing (known issue)
+  - 🔄 Watchman warnings present
+  - ⚠️ Expected namespace wrapper errors
+
+- **Middle Server**:
+  - ✅ API endpoint tests passing
+  - ✅ Model tests passing
+  - ✅ Integration tests passing
+
 ## API Endpoints
 
 - `/api/swarm/jobs`: Create and manage swarm jobs

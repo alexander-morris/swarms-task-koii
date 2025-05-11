@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "test": "npm run build && node build/tests/simulateTask.js",
-    "jest-test": "jest --detectOpenHandles",
+    "jest-test": "jest --detectOpenHandles --forceExit --config jest.config.js",
     "start": "node index.js",
     "prod-debug": "nodemon --ignore 'dist/*' tests/prod-debug.js",
     "webpack": "rm -rf dist && rm -rf node_modules && yarn && webpack",
