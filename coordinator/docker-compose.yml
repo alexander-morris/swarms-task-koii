@@ -1,0 +1,9 @@
+version: "3.8"
+services:
+  middle-server:
+    exclude_from_hc: true
+    build:
+      context: ./middle-server
+    environment:
+      - NODE_ENV=production
+    restart: always

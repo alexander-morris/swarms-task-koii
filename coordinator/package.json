@@ -1,0 +1,11 @@
+{
+  "name": "middle-server-root",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "dev": "cd middle-server && npm run dev"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

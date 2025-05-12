@@ -1,0 +1,45 @@
+.venv
+.env
+__pycache__
+.pytest_cache
+*.db
+test
+test_state.json
+task_flow.egg-info
+example_repo
+signature.js
+git-filter-repo
+task/orca/
+**/dist/
+# yarn.lock
+package-lock.json
+node_modules
+build
+migrate.sh
+*/dev.js
+executables/*
+namespace/*
+config/*
+.env.local
+taskStateInfoKeypair.json
+localKOIIDB.db
+metadata.json
+.npmrc
+*.pem
+.vscode
+.cursor
+data/chunks
+data/process
+test_state.csv
+todos-example.csv
+
+.env.prod.local
+# Ignore auto-generated repository directories
+repos/
+
+
+# Ignore Data
+data/*
+
+
+venv
