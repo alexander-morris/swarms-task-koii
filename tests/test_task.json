@@ -1,0 +1,13 @@
+{
+  "taskId": "test-task-123",
+  "description": "Sample test task for local development",
+  "status": "pending",
+  "data": {
+    "input": "Sample input data",
+    "expectedOutput": "Sample expected output"
+  },
+  "metadata": {
+    "createdAt": "2023-01-01T00:00:00Z",
+    "updatedAt": "2023-01-01T00:00:00Z"
+  }
+} 

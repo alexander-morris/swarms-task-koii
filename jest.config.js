@@ -1,3 +1,4 @@
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
@@ -7,5 +8,9 @@ module.exports = {
     '@_koii/create-task-cli': '<rootDir>/middle-server/middle-server/src/tests/mocks/koii.ts',
     '@_koii/web3.js': '<rootDir>/middle-server/middle-server/src/tests/mocks/koii.ts'
   },
-  setupFiles: ['<rootDir>/middle-server/middle-server/src/tests/setup.ts']
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: 'tsconfig.json'
+    }]
+  }
 }; 

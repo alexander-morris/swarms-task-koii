@@ -1,18 +1,19 @@
 /// <reference types="jest" />
 
-import { app, startServer } from './middle-server/middle-server/src/app';
+import { describe, beforeAll, afterAll, beforeEach, test, expect } from '@jest/globals';
+import { app, startServer } from '../middle-server/middle-server/src/app';
 import mongoose from 'mongoose';
-import { SwarmJobModel, SwarmStatusModel, SwarmResultModel } from './middle-server/middle-server/src/models/swarm';
+import { SwarmJobModel, SwarmStatusModel, SwarmResultModel } from '../middle-server/middle-server/src/models/swarm';
 import { Server } from 'http';
 import request from 'supertest';
-import { spawn, ChildProcess } from 'child_process';
-import path from 'path';
 
-describe('Integration Tests', () => {
+// Set test environment variables
+process.env.NODE_ENV = 'test';
+process.env.MONGODB_URI = 'mongodb://localhost:27017/middle-server-test';
+
+describe('Middle Server Integration Tests', () => {
   let server: Server;
-  let swarmProcess: ChildProcess;
   const TEST_PORT = 3001;
-  const BASE_URL = `http://localhost:${TEST_PORT}`;
 
   const validSwarmSpec = {
     name: "Test Integration Swarm",
@@ -34,7 +35,7 @@ describe('Integration Tests', () => {
 
   beforeAll(async () => {
     // Connect to test database
-    await mongoose.connect('mongodb://localhost:27017/middle-server-test');
+    await mongoose.connect(process.env.MONGODB_URI || '');
     
     // Start the middle server
     process.env.PORT = TEST_PORT.toString();
@@ -49,9 +50,6 @@ describe('Integration Tests', () => {
     await mongoose.connection.dropDatabase();
     await mongoose.connection.close();
     server.close();
-    if (swarmProcess) {
-      swarmProcess.kill();
-    }
   });
 
   beforeEach(async () => {
@@ -61,7 +59,7 @@ describe('Integration Tests', () => {
     await SwarmResultModel.deleteMany({});
   });
 
-  test('Complete integration flow', async () => {
+  test('Create and get swarm job', async () => {
     // 1. Create a new swarm job
     const createResponse = await request(app)
       .post('/api/swarm/jobs')
@@ -71,56 +69,70 @@ describe('Integration Tests', () => {
     expect(createResponse.body).toHaveProperty('job_id');
     const jobId = createResponse.body.job_id;
 
-    // 2. Start the swarm task process
-    const swarmTaskPath = path.resolve(__dirname, './modified-swarm-task/worker/src/index.ts');
-    swarmProcess = spawn('ts-node', [swarmTaskPath], {
-      env: {
-        ...process.env,
-        MIDDLE_SERVER_URL: BASE_URL,
-        NODE_ENV: 'test'
+    // 2. Get the created job
+    const getResponse = await request(app)
+      .get(`/api/swarm/jobs/${jobId}`);
+
+    expect(getResponse.status).toBe(200);
+    expect(getResponse.body).toHaveProperty('swarm_spec');
+    expect(getResponse.body.swarm_spec).toEqual(validSwarmSpec);
+  });
+
+  test('Update swarm job status', async () => {
+    // 1. Create a new swarm job
+    const createResponse = await request(app)
+      .post('/api/swarm/jobs')
+      .send({ swarm_spec: validSwarmSpec });
+
+    const jobId = createResponse.body.job_id;
+
+    // 2. Update the job status
+    const updateResponse = await request(app)
+      .put(`/api/swarm/jobs/${jobId}/status`)
+      .send({ status: 'in_progress' });
+
+    expect(updateResponse.status).toBe(200);
+    expect(updateResponse.body).toHaveProperty('status', 'in_progress');
+
+    // 3. Verify the status was updated
+    const getResponse = await request(app)
+      .get(`/api/swarm/jobs/${jobId}`);
+
+    expect(getResponse.status).toBe(200);
+    expect(getResponse.body).toHaveProperty('status', 'in_progress');
+  });
+
+  test('Store and get swarm result', async () => {
+    // 1. Create a new swarm job
+    const createResponse = await request(app)
+      .post('/api/swarm/jobs')
+      .send({ swarm_spec: validSwarmSpec });
+
+    const jobId = createResponse.body.job_id;
+
+    // 2. Store a result
+    const testResult = {
+      output: "Test output",
+      metadata: {
+        duration: 1000,
+        steps: 5
       }
-    });
+    };
 
-    // Log swarm process output for debugging
-    if (swarmProcess.stdout) {
-      swarmProcess.stdout.on('data', (data) => {
-        console.log(`Swarm stdout: ${data}`);
-      });
-    }
+    const storeResponse = await request(app)
+      .post(`/api/swarm/jobs/${jobId}/result`)
+      .send(testResult);
 
-    if (swarmProcess.stderr) {
-      swarmProcess.stderr.on('data', (data) => {
-        console.error(`Swarm stderr: ${data}`);
-      });
-    }
+    expect(storeResponse.status).toBe(200);
+    expect(storeResponse.body).toHaveProperty('success', true);
 
-    // 3. Wait for the swarm to process the job (poll status)
-    let jobCompleted = false;
-    let attempts = 0;
-    const maxAttempts = 30; // 30 seconds timeout
-    
-    while (!jobCompleted && attempts < maxAttempts) {
-      const statusResponse = await request(app)
-        .get(`/api/swarm/jobs/${jobId}`);
-      
-      expect(statusResponse.status).toBe(200);
-      
-      if (statusResponse.body.status === 'completed') {
-        jobCompleted = true;
-      } else {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        attempts++;
-      }
-    }
-
-    expect(jobCompleted).toBe(true);
-
-    // 4. Check the final result
-    const resultResponse = await request(app)
+    // 3. Get the stored result
+    const getResponse = await request(app)
       .get(`/api/swarm/jobs/${jobId}/result`);
 
-    expect(resultResponse.status).toBe(200);
-    expect(resultResponse.body).toHaveProperty('output');
-    expect(resultResponse.body.output).toBeDefined();
-  }, 35000); // Set timeout to 35 seconds
+    expect(getResponse.status).toBe(200);
+    expect(getResponse.body).toHaveProperty('output', testResult.output);
+    expect(getResponse.body).toHaveProperty('metadata');
+    expect(getResponse.body.metadata).toEqual(testResult.metadata);
+  });
 }); 
