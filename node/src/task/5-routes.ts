@@ -5,6 +5,11 @@ import { submission } from "./2-submission";
 import { audit } from "./3-audit";
 import { taskRunner } from "@_koii/task-manager";
 import { middleServerUrl, status } from "../utils/constant";
+import axios from 'axios';
+
+// Swarms API configuration
+const SWARMS_API_URL = process.env.SWARMS_API_URL || 'http://localhost:8080';
+const SWARMS_API_KEY = process.env.SWARMS_API_KEY;
 
 /**
  *
@@ -31,10 +36,26 @@ export async function routes() {
   });
 
   app.get("/task/:roundNumber", async (req, res) => {
-    console.log("task endpoint called with round number: ", req.params.roundNumber);
-    const roundNumber = req.params.roundNumber;
-    const taskResult = await task(Number(roundNumber));
-    res.status(200).json({ result: taskResult });
+    try {
+      console.log("task endpoint called with round number: ", req.params.roundNumber);
+      const roundNumber = req.params.roundNumber;
+      const taskResult = await task(Number(roundNumber));
+      
+      // Get the stored result
+      const storedResult = await namespaceWrapper.storeGet(`result-${roundNumber}`);
+      if (!storedResult) {
+        throw new Error("No result found for this round");
+      }
+
+      const result = JSON.parse(storedResult);
+      res.status(200).json({ 
+        result: taskResult,
+        swarmResult: result
+      });
+    } catch (error) {
+      console.error("[TASK] Error in task endpoint:", error);
+      res.status(500).json({ error: "Failed to execute task" });
+    }
   });
   app.get("/audit/:roundNumber/:cid/:submitterPublicKey", async (req, res) => {
     const cid = req.params.cid;
@@ -142,6 +163,64 @@ export async function routes() {
       console.error("[TASK] Error adding PR to summarizer todo:", error);
       // await namespaceWrapper.storeSet(`result-${roundNumber}`, status.SAVING_TODO_PR_FAILED);
       res.status(400).json({ error: "Failed to save PR" });
+    }
+  });
+
+  // New route to check swarm status
+  app.get("/swarm-status/:jobId", async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const response = await axios.get(
+        `${SWARMS_API_URL}/v1/swarm/logs`,
+        {
+          headers: {
+            'x-api-key': SWARMS_API_KEY
+          },
+          params: {
+            job_id: jobId
+          }
+        }
+      );
+      res.status(200).json(response.data);
+    } catch (error) {
+      console.error("[TASK] Error fetching swarm status:", error);
+      res.status(500).json({ error: "Failed to fetch swarm status" });
+    }
+  });
+
+  // New route to get available models
+  app.get("/available-models", async (_req, res) => {
+    try {
+      const response = await axios.get(
+        `${SWARMS_API_URL}/v1/models/available`,
+        {
+          headers: {
+            'x-api-key': SWARMS_API_KEY
+          }
+        }
+      );
+      res.status(200).json(response.data);
+    } catch (error) {
+      console.error("[TASK] Error fetching available models:", error);
+      res.status(500).json({ error: "Failed to fetch available models" });
+    }
+  });
+
+  // New route to get available swarm types
+  app.get("/available-swarm-types", async (_req, res) => {
+    try {
+      const response = await axios.get(
+        `${SWARMS_API_URL}/v1/swarms/available`,
+        {
+          headers: {
+            'x-api-key': SWARMS_API_KEY
+          }
+        }
+      );
+      res.status(200).json(response.data);
+    } catch (error) {
+      console.error("[TASK] Error fetching available swarm types:", error);
+      res.status(500).json({ error: "Failed to fetch available swarm types" });
     }
   });
 }

@@ -220,3 +220,52 @@ Each component has its own test configuration:
 ## License
 
 [MIT License](LICENSE)
+
+## Running the Project
+
+### Running Both Coordinator and Node
+
+To start both the coordinator and the node in development mode, you can use the root project script. This script first runs the coordinator's start-and-test.sh script and then runs the node's start-node.sh script.
+
+1. Make sure you are in the root directory of the project.
+2. Run the following command:
+
+   ```bash
+   ./run-all.sh
+   ```
+
+   This script will:
+   - Start the coordinator in development mode.
+   - Start the node in development mode.
+
+### Testing the Scripts Individually
+
+You can also test each script independently:
+
+- **Coordinator**: Navigate to the `coordinator` directory and run:
+
+  ```bash
+  ./start-and-test.sh
+  ```
+
+- **Node**: Navigate to the `node` directory and run:
+
+  ```bash
+  ./start-node.sh
+  ```
+
+### Prerequisites
+
+Ensure that the following prerequisites are met before running the scripts:
+
+- The middle server must be running.
+- The Swarms API must be accessible.
+- All necessary environment variables are set in the respective `.env` files.
+
+### Troubleshooting
+
+If you encounter any issues while running the scripts, check the following:
+
+- Ensure that the `package.json` file exists in the `node` directory.
+- Verify that all dependencies are installed.
+- Check the logs for any error messages.
