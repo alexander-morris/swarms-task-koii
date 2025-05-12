@@ -103,4 +103,7 @@ fi
 
 cd - > /dev/null || exit 1
 
-echo -e "${GREEN}Coordinator tests completed!${NC}" 
+echo -e "${GREEN}Coordinator tests completed!${NC}"
+
+cd coordinator
+./start-and-test.sh 
