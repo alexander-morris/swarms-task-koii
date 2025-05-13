@@ -23,7 +23,7 @@ export const verifyBearerToken = (req: Request, res: Response, next: NextFunctio
 
   // In a real application, you would verify the token against your authentication system
   // For now, we'll just check if it matches the expected token from environment variables
-  const expectedToken = process.env.PROMETHEUS_INCOME_REQUEST_API_KEY;
+  const expectedToken = process.env.SWARMS_ADMIN_KEY;
 
   if (token !== expectedToken) {
     res.status(403).json({

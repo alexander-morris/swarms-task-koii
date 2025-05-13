@@ -94,3 +94,180 @@ The task node integrates with the Swarms API to:
 ## Test Scripts
 
 Live API test scripts are available in `
+
+# Coordinator
+
+The coordinator manages communication between nodes and external services, handling both upstream (external) and downstream (node) API requests.
+
+## Architecture
+
+The coordinator implements a pull-based architecture where upstream services initiate communication through REST API endpoints.
+
+```mermaid
+graph TD
+    subgraph "Upstream Services"
+        US1[External Service 1]
+        US2[External Service 2]
+    end
+
+    subgraph "Coordinator"
+        API[API Endpoints]
+        AUTH[Auth Middleware]
+        DB[(Database)]
+    end
+
+    subgraph "Nodes"
+        N1[Node 1]
+        N2[Node 2]
+    end
+
+    US1 -->|Bearer Token| API
+    US2 -->|Bearer Token| API
+    API -->|Verify Token| AUTH
+    AUTH -->|Store Data| DB
+    N1 -->|Signed Request| API
+    N2 -->|Signed Request| API
+    API -->|Verify Signature| AUTH
+    AUTH -->|Store Result| DB
+```
+
+### Communication Patterns
+
+1. **Upstream Communication (Pull Model)**
+   - External services push data to the coordinator
+   - Authentication via `SWARMS_ADMIN_KEY` bearer token
+   - Available endpoints:
+     ```
+     POST /api/swarm/jobs          - Create new swarm jobs
+     GET  /api/swarm/jobs/:jobId   - Get job status
+     PUT  /api/swarm/jobs/:jobId/status  - Update job status
+     POST /api/swarm/jobs/:jobId/result  - Store results
+     GET  /api/swarm/jobs/:jobId/result  - Get results
+     ```
+   - No active polling or fetching from upstream services
+   - Coordinator waits for upstream services to push data
+
+2. **Downstream Communication**
+   - Nodes authenticate using public key cryptography
+   - Each request must be signed with the node's private key
+   - Required headers:
+     ```
+     Authorization: Bearer <SWARMS_ADMIN_KEY>
+     X-Signature: <base58-encoded-signature>
+     X-Public-Key: <base58-encoded-public-key>
+     ```
+
+## Authentication
+
+The coordinator implements two distinct authentication methods:
+
+### 1. Upstream Authentication (External Services)
+
+External services authenticate using a bearer token mechanism:
+
+```typescript
+// Example request
+const response = await axios.post(
+  "http://localhost:3000/api/swarm/jobs",
+  payload,
+  {
+    headers: {
+      "Authorization": `Bearer ${process.env.SWARMS_ADMIN_KEY}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
+```
+
+**Configuration:**
+- Set the `SWARMS_ADMIN_KEY` environment variable with a secure key
+- This key is used to authenticate all upstream API requests
+- Requests without a valid bearer token will receive a 401 Unauthorized response
+
+### 2. Downstream Authentication (Nodes)
+
+Nodes authenticate using public key cryptography:
+
+1. **Key Generation:**
+   ```typescript
+   const keypair = Keypair.generate();
+   const publicKey = keypair.publicKey.toBase58();
+   ```
+
+2. **Request Signing:**
+   ```typescript
+   const payload = {
+     taskId: "task-123",
+     timestamp: Date.now(),
+     action: "create_swarm"
+   };
+   const signature = await signData(keypair, payload);
+   ```
+
+3. **Making Authenticated Requests:**
+   ```typescript
+   const response = await axios.post(
+     "http://localhost:3000/api/swarm/jobs",
+     payload,
+     {
+       headers: {
+         "Authorization": `Bearer ${process.env.SWARMS_ADMIN_KEY}`,
+         "X-Signature": signature,
+         "X-Public-Key": publicKey,
+         "Content-Type": "application/json"
+       }
+     }
+   );
+   ```
+
+**Required Headers:**
+- `Authorization`: Bearer token for upstream authentication
+- `X-Signature`: Base58-encoded signature of the request payload
+- `X-Public-Key`: Base58-encoded public key of the node
+
+**Security:**
+- Each request must be signed with the node's private key
+- The signature is verified using the provided public key
+- Invalid signatures result in 401 Unauthorized responses
+- The payload must include a timestamp to prevent replay attacks
+
+## Example Usage
+
+See `scripts/auth-example.ts` for a complete example of making authenticated requests:
+
+```typescript
+// Generate keypair
+const keypair = Keypair.generate();
+
+// Create and sign payload
+const payload = {
+  taskId: "example-task-123",
+  timestamp: Date.now(),
+  action: "create_swarm"
+};
+const signature = await signData(keypair, payload);
+
+// Make authenticated request
+const response = await axios.post(
+  "http://localhost:3000/api/swarm/jobs",
+  payload,
+  {
+    headers: {
+      "Authorization": `Bearer ${process.env.SWARMS_ADMIN_KEY}`,
+      "X-Signature": signature,
+      "X-Public-Key": keypair.publicKey.toBase58()
+    }
+  }
+);
+```
+
+## Testing
+
+The authentication system is tested in:
+- `src/tests/auth.test.ts`: General authentication tests
+- `src/tests/downstream-auth.test.ts`: Downstream API authentication tests
+
+Run tests with:
+```bash
+npm test
+```

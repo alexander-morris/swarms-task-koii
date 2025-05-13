@@ -8,9 +8,9 @@ module.exports = {
     '@_koii/web3.js': '<rootDir>/src/tests/mocks/koii.ts'
   },
   setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
-  globals: {
-    'ts-jest': {
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {
       tsconfig: 'tsconfig.json'
-    }
+    }]
   }
 };
