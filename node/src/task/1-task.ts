@@ -21,24 +21,24 @@ const SWARMS_API_KEY = process.env.SWARMS_API_KEY;
 export async function task(roundNumber: number): Promise<void> {
   try {
     // Get task from middle server
-    const taskResponse = await fetch(`${middleServerUrl}/summarizer/worker/get-task`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ taskId: TASK_ID, round: roundNumber }),
-    });
-
-    if (!taskResponse.ok) {
-      throw new Error(`Failed to fetch task: ${taskResponse.statusText}`);
-    }
-
-    const taskData = await taskResponse.json();
-    
+    // const taskResponse = await fetch(`${middleServerUrl}/summarizer/worker/get-task`, {
+    //   method: "GET",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ taskId: TASK_ID, round: roundNumber }),
+    // });
+    //
+    // if (!taskResponse.ok) {
+    //   throw new Error(`Failed to fetch task: ${taskResponse.statusText}`);
+    // }
+    //
+    // const taskData = await taskResponse.json();
+    //
     // Create swarm configuration
     const swarmConfig = {
       name: `swarm-${TASK_ID}-${roundNumber}`,
       description: `Swarm for task ${TASK_ID} round ${roundNumber}`,
-      task: taskData.task,
-      agents: taskData.agents || [
+      task: "<replace-with-task>", // TODO: Replace with actual task if needed
+      agents: [
         {
           agent_name: "primary-agent",
           model_name: "gpt-4o-mini",

@@ -30,27 +30,27 @@ async function auditWithTimeout(cid: string, roundNumber: number, submitterKey: 
     }
     console.log(`[AUDIT] ✅ Signature decoded successfully`);
 
-    console.log(`[AUDIT] Checking summarizer status for submitter ${submitterKey}`);
-    const checkSummarizerResponse = await fetch(`${middleServerUrl}/summarizer/worker/check-todo`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        stakingKey: submitterKey,
-        roundNumber, // This round number doesn't matter
-        githubUsername: decodeResult.githubUsername,
-        prUrl: decodeResult.prUrl,
-      }),
-    });
-    const checkSummarizerJSON = await checkSummarizerResponse.json();
-    console.log(`[AUDIT] Summarizer check response:`, checkSummarizerJSON);
-
-    if (!checkSummarizerJSON.success) {
-      console.log(`[AUDIT] ❌ Audit failed for ${submitterKey}`);
-      return false;
-    }
-    console.log(`[AUDIT] ✅ Summarizer check passed`);
+    // console.log(`[AUDIT] Checking summarizer status for submitter ${submitterKey}`);
+    // const checkSummarizerResponse = await fetch(`${middleServerUrl}/summarizer/worker/check-todo`, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify({
+    //     stakingKey: submitterKey,
+    //     roundNumber, // This round number doesn't matter
+    //     githubUsername: decodeResult.githubUsername,
+    //     prUrl: decodeResult.prUrl,
+    //   }),
+    // });
+    // const checkSummarizerJSON = await checkSummarizerResponse.json();
+    // console.log(`[AUDIT] Summarizer check response:`, checkSummarizerJSON);
+    //
+    // if (!checkSummarizerJSON.success) {
+    //   console.log(`[AUDIT] ❌ Audit failed for ${submitterKey}`);
+    //   return false;
+    // }
+    // console.log(`[AUDIT] ✅ Summarizer check passed`);
 
     console.log(`[AUDIT] Sending audit request for submitter: ${submitterKey}`);
     console.log(`[AUDIT] Submission data being sent to audit:`, decodeResult);

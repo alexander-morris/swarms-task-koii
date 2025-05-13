@@ -8,7 +8,7 @@
         "build": "tsc",
         "test": "npm run build && node build/tests/simulateTask.js",
         "jest-test": "jest --detectOpenHandles",
-        "start": "node index.js",
+        "start": "node build/src/index.js",
         "dev": "ts-node-dev --esm --respawn src/index.ts",
         "prod-debug": "nodemon --ignore 'dist/*' tests/prod-debug.js",
         "webpack": "rm -rf dist && rm -rf node_modules && yarn && webpack",

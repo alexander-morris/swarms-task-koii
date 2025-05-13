@@ -152,17 +152,17 @@ async function notifyMiddleServer(params: {
   };
 
   const signature = await namespaceWrapper.payloadSigning(payload, secretKey);
-  const response = await fetch(`${middleServerUrl}/summarizer/worker/add-round-number`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ signature, stakingKey }),
-  });
-
-  console.log("[SUBMISSION] Add PR Response: ", response);
-
-  if (response.status !== 200) {
-    throw new Error(`Posting to middle server failed: ${response.statusText}`);
-  }
+  // const response = await fetch(`${middleServerUrl}/summarizer/worker/add-round-number`, {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify({ signature, stakingKey }),
+  // });
+  //
+  // console.log("[SUBMISSION] Add PR Response: ", response);
+  //
+  // if (response.status !== 200) {
+  //   throw new Error(`Posting to middle server failed: ${response.statusText}`);
+  // }
 }
 
 async function signSubmissionPayload(payload: any, secretKey: Uint8Array<ArrayBufferLike>): Promise<string> {
