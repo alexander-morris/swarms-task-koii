@@ -12,6 +12,16 @@ NODE_PORT=4001
 TEST_ADMIN_KEY="test-admin-key-123"
 TEST_API_KEY="test-api-key-456"
 
+# Function to kill any process using a port
+kill_port() {
+    local port=$1
+    if lsof -i :$port > /dev/null 2>&1; then
+        echo -e "${YELLOW}Killing process on port $port...${NC}"
+        lsof -ti :$port | xargs kill -9 2>/dev/null
+        sleep 1
+    fi
+}
+
 # Function to check if a port is in use
 check_port() {
     lsof -i :$1 > /dev/null 2>&1
@@ -69,17 +79,21 @@ check_command "curl"
 check_command "lsof"
 check_command "npm"
 
+# Kill any processes on the coordinator or node ports
+kill_port $COORDINATOR_PORT
+kill_port $NODE_PORT
+
 # Set up cleanup on script exit
 trap cleanup EXIT INT TERM
 
-# Check if ports are available
+# Check if ports are available (should not be in use after kill)
 if check_port $COORDINATOR_PORT; then
-    echo -e "${RED}Port $COORDINATOR_PORT is already in use${NC}"
+    echo -e "${RED}Port $COORDINATOR_PORT is still in use after kill attempt${NC}"
     exit 1
 fi
 
 if check_port $NODE_PORT; then
-    echo -e "${RED}Port $NODE_PORT is already in use${NC}"
+    echo -e "${RED}Port $NODE_PORT is still in use after kill attempt${NC}"
     exit 1
 fi
 
