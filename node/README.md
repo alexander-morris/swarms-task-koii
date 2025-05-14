@@ -81,4 +81,92 @@ The system includes comprehensive logging and telemetry:
 - Request logging
 - Performance monitoring
 - Error tracking
-- Usage statistics 
+- Usage statistics
+
+# Node for Swarm Task Processing
+
+This node connects to the middle server to process swarm tasks and manage job execution.
+
+## Environment Variables
+
+The following environment variables are required:
+
+- `SWARMS_API_URL`: URL of the Swarms API (default: http://localhost:8080)
+- `SWARMS_API_KEY`: API key for the Swarms API
+- `MIDDLE_SERVER_URL`: URL of the middle server (default: http://localhost:3000)
+- `SWARMS_ADMIN_KEY`: Admin key for authenticating with the middle server
+- `PORT`: Port for the node to listen on (default: 4000)
+
+## Authentication
+
+The node uses two types of authentication:
+
+1. **Swarms API Authentication**
+   - Uses `SWARMS_API_KEY` in the `x-api-key` header
+   - Required for interacting with the Swarms API
+
+2. **Middle Server Authentication**
+   - Uses `SWARMS_ADMIN_KEY` in the `Authorization: Bearer` header
+   - Required for all API calls to the middle server
+   - Follows the error response conventions:
+     - 401: Missing or invalid admin key
+     - 403: Invalid bearer token
+     - 400: Validation errors
+
+## Quick Start
+
+1. Set up environment variables:
+   ```bash
+   export SWARMS_API_URL="http://localhost:8080"
+   export SWARMS_API_KEY="your-api-key"
+   export MIDDLE_SERVER_URL="http://localhost:3000"
+   export SWARMS_ADMIN_KEY="your-admin-key"
+   export PORT=4000
+   ```
+
+2. Start the node:
+   ```bash
+   ./start-node.sh
+   ```
+
+## Development
+
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm start` - Start production server
+- `npm test` - Run tests
+
+## API Integration
+
+The node uses a centralized API client (`src/utils/api.ts`) that handles:
+- Authentication with the middle server
+- Error handling and logging
+- Response interceptors for common error cases
+
+Example usage:
+```typescript
+import api from './utils/api';
+
+// Create a new swarm job
+const response = await api.post('/api/swarm/jobs', {
+  swarm_spec: {
+    name: "Test Swarm",
+    description: "A test swarm",
+    agents: [...],
+    max_loops: 3,
+    swarm_type: "test",
+    task: "Test task"
+  }
+});
+```
+
+## Error Handling
+
+The API client automatically handles common error cases:
+- 401: Missing or invalid admin key
+- 403: Invalid bearer token
+- 400: Validation errors
+- Network errors
+- Server errors
+
+All errors are logged with descriptive messages to help with debugging. 

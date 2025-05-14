@@ -97,17 +97,18 @@ Live API test scripts are available in `
 
 # Coordinator
 
-The coordinator manages communication between nodes and external services, handling both upstream (external) and downstream (node) API requests.
+The coordinator manages communication between project owners and nodes, handling both upstream (project owner) and downstream (node) API requests.
 
 ## Architecture
 
-The coordinator implements a pull-based architecture where upstream services initiate communication through REST API endpoints.
+The coordinator implements a pull-based architecture where:
+- Project owners push jobs to the coordinator using `SWARMS_ADMIN_KEY`
+- Nodes pull jobs from the coordinator using public key cryptography
 
 ```mermaid
 graph TD
-    subgraph "Upstream Services"
-        US1[External Service 1]
-        US2[External Service 2]
+    subgraph "Project Owner"
+        PO[Project Owner]
     end
 
     subgraph "Coordinator"
@@ -121,20 +122,19 @@ graph TD
         N2[Node 2]
     end
 
-    US1 -->|Bearer Token| API
-    US2 -->|Bearer Token| API
-    API -->|Verify Token| AUTH
-    AUTH -->|Store Data| DB
+    PO -->|SWARMS_ADMIN_KEY| API
+    API -->|Verify Admin Token| AUTH
+    AUTH -->|Store Job| DB
     N1 -->|Signed Request| API
     N2 -->|Signed Request| API
-    API -->|Verify Signature| AUTH
+    API -->|Verify Node Signature| AUTH
     AUTH -->|Store Result| DB
 ```
 
 ### Communication Patterns
 
-1. **Upstream Communication (Pull Model)**
-   - External services push data to the coordinator
+1. **Project Owner Communication (Push Model)**
+   - Project owners push jobs to the coordinator
    - Authentication via `SWARMS_ADMIN_KEY` bearer token
    - Available endpoints:
      ```
@@ -144,29 +144,29 @@ graph TD
      POST /api/swarm/jobs/:jobId/result  - Store results
      GET  /api/swarm/jobs/:jobId/result  - Get results
      ```
-   - No active polling or fetching from upstream services
-   - Coordinator waits for upstream services to push data
+   - Only project owners with valid `SWARMS_ADMIN_KEY` can create jobs
 
-2. **Downstream Communication**
+2. **Node Communication (Pull Model)**
    - Nodes authenticate using public key cryptography
    - Each request must be signed with the node's private key
-   - Required headers:
+   - Required headers for node requests:
      ```
-     Authorization: Bearer <SWARMS_ADMIN_KEY>
      X-Signature: <base58-encoded-signature>
      X-Public-Key: <base58-encoded-public-key>
      ```
+   - Nodes can pull jobs and submit results
+   - No bearer token required for node requests
 
 ## Authentication
 
 The coordinator implements two distinct authentication methods:
 
-### 1. Upstream Authentication (External Services)
+### 1. Project Owner Authentication
 
-External services authenticate using a bearer token mechanism:
+Project owners authenticate using a bearer token mechanism:
 
 ```typescript
-// Example request
+// Example request from project owner
 const response = await axios.post(
   "http://localhost:3000/api/swarm/jobs",
   payload,
@@ -181,10 +181,11 @@ const response = await axios.post(
 
 **Configuration:**
 - Set the `SWARMS_ADMIN_KEY` environment variable with a secure key
-- This key is used to authenticate all upstream API requests
+- This key is used to authenticate project owner API requests
 - Requests without a valid bearer token will receive a 401 Unauthorized response
+- Only project owners should have access to this key
 
-### 2. Downstream Authentication (Nodes)
+### 2. Node Authentication
 
 Nodes authenticate using public key cryptography:
 
@@ -211,7 +212,6 @@ Nodes authenticate using public key cryptography:
      payload,
      {
        headers: {
-         "Authorization": `Bearer ${process.env.SWARMS_ADMIN_KEY}`,
          "X-Signature": signature,
          "X-Public-Key": publicKey,
          "Content-Type": "application/json"
@@ -220,8 +220,7 @@ Nodes authenticate using public key cryptography:
    );
    ```
 
-**Required Headers:**
-- `Authorization`: Bearer token for upstream authentication
+**Required Headers for Nodes:**
 - `X-Signature`: Base58-encoded signature of the request payload
 - `X-Public-Key`: Base58-encoded public key of the node
 
@@ -236,7 +235,7 @@ Nodes authenticate using public key cryptography:
 See `scripts/auth-example.ts` for a complete example of making authenticated requests:
 
 ```typescript
-// Generate keypair
+// Generate keypair for node
 const keypair = Keypair.generate();
 
 // Create and sign payload
@@ -247,13 +246,12 @@ const payload = {
 };
 const signature = await signData(keypair, payload);
 
-// Make authenticated request
+// Make authenticated request as node
 const response = await axios.post(
   "http://localhost:3000/api/swarm/jobs",
   payload,
   {
     headers: {
-      "Authorization": `Bearer ${process.env.SWARMS_ADMIN_KEY}`,
       "X-Signature": signature,
       "X-Public-Key": keypair.publicKey.toBase58()
     }
@@ -265,7 +263,7 @@ const response = await axios.post(
 
 The authentication system is tested in:
 - `src/tests/auth.test.ts`: General authentication tests
-- `src/tests/downstream-auth.test.ts`: Downstream API authentication tests
+- `src/tests/downstream-auth.test.ts`: Node authentication tests
 
 Run tests with:
 ```bash
