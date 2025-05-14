@@ -143,19 +143,19 @@ export async function routes() {
         action: "add-todo-pr",
       };
       const middleServerSignature = await namespaceWrapper.payloadSigning(middleServerPayload, secretKey);
-      const middleServerResponse = await fetch(`${middleServerUrl}/summarizer/worker/add-todo-pr`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ signature: middleServerSignature, stakingKey: stakingKey }),
-      });
+      // const middleServerResponse = await fetch(`${middleServerUrl}/summarizer/worker/add-todo-pr`, {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({ signature: middleServerSignature, stakingKey: stakingKey }),
+      // });
 
-      console.log("[TASK] Add PR Response: ", middleServerResponse);
-
-      if (middleServerResponse.status !== 200) {
-        throw new Error(`Posting to middle server failed: ${middleServerResponse.statusText}`);
-      }
+      // console.log("[TASK] Add PR Response: ", middleServerResponse);
+      //
+      // if (middleServerResponse.status !== 200) {
+      //   throw new Error(`Posting to middle server failed: ${middleServerResponse.statusText}`);
+      // }
       await namespaceWrapper.storeSet(`shouldMakeSubmission`, "true");
       await namespaceWrapper.storeSet(`swarmBountyId`, swarmBountyId.toString());
       res.status(200).json({ result: "Successfully saved PR" });

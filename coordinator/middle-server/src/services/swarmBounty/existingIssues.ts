@@ -11,6 +11,8 @@ interface BountyIssue {
   status: string;
 }
 
+// Upstream API - Commented out
+/*
 export async function getExistingIssues(): Promise<BountyIssue[]> {
   try {
     // read from the bounty markdown file
@@ -95,6 +97,7 @@ export async function getExistingIssues(): Promise<BountyIssue[]> {
 export async function getInitializedDocumentSummarizeIssues(issues: BountyIssue[]) {
   return issues.filter((issue) => issue.status === "Initialized" && issue.bountyTask === "Document & Summarize");
 }
+*/
 
 // export async function getInitializedIssuesMongoDB(swarmType: SwarmBountyType) {
 //   const issues = await SwarmBountyModel.find({ status: SwarmBountyStatus.LOADING, swarmType: swarmType });

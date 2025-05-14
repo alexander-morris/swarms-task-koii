@@ -145,4 +145,16 @@ The `live_unit_tests/` directory contains scripts that exercise the Swarm APIs a
    npx ts-node live_unit_tests/utils/signTest.ts
    ```
 
-These scripts will make real HTTP requests to the server and print results to the console. They are useful for verifying end-to-end functionality and API compatibility after changes. 
+These scripts will make real HTTP requests to the server and print results to the console. They are useful for verifying end-to-end functionality and API compatibility after changes.
+
+## Error Response Conventions
+
+- **Authentication errors** (invalid or missing admin key):
+  - Status codes: `401` (missing), `403` (invalid)
+  - Response body: `{ "message": "..." }`
+
+- **Validation errors** (invalid job spec):
+  - Status code: `400`
+  - Response body: `{ "error": "..." }`
+
+These conventions are enforced and tested in the API test suite. 

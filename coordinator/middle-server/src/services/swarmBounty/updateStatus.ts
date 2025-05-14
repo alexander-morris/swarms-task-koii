@@ -1,6 +1,9 @@
 import { SwarmBountyStatus } from "../../config/constant";
 import dotenv from "dotenv";
 dotenv.config();
+
+// Upstream API - Commented out
+/*
 export async function updateSwarmBountyStatus(swarmBountyId: string, status: SwarmBountyStatus) {
   try {
     if (process.env.SKIP_PROMETHEUS_SERVER) {
@@ -28,3 +31,4 @@ export async function updateSwarmBountyStatus(swarmBountyId: string, status: Swa
     console.error("Error updating swarm bounty status", error);
   }
 }
+*/
